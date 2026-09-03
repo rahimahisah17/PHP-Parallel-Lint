@@ -33,8 +33,25 @@ jobs:
 
       # Note: do NOT turn on the requirement checker in the box config as it is no longer
       # compatible with PHP < 7.2.
+      - name: Get latest Box version
+        id: box-version
+        run: |
+          latest_url=$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/box-project/box/releases/latest)
+          echo "version=${latest_url##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Box PHAR
+        id: cache-box
+        uses: actions/cache@v4
+        with:
+          path: box.phar
+          key: box-phar-${{ steps.box-version.outputs.version }}
+
       - name: Install Box
-        run: wget https://github.com/box-project/box/releases/latest/download/box.phar -O box.phar && chmod 0755 box.phar && pwd
+        if: steps.cache-box.outputs.cache-hit != 'true'
+        run: wget https://github.com/box-project/box/releases/latest/download/box.phar -O box.phar
+
+      - name: Set Box permissions
+        run: chmod 0755 box.phar
 
       - name: Validate configuration
         run: php box.phar validate -i box.json
