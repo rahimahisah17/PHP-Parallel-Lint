@@ -46,18 +46,20 @@ jobs:
       - name: Cache Box PHAR
         id: cache-box
         if: inputs.use-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: box.phar
           key: box-phar-${{ steps.box-version.outputs.version }}
 
       - name: Install Box
         if: ${{ !inputs.use-cache || steps.cache-box.outputs.cache-hit != 'true' }}
-        run: wget https://github.com/box-project/box/releases/latest/download/box.phar -O box.phar
+        env:
+          BOX_VERSION: ${{ steps.box-version.outputs.version }}
+        run: wget "https://github.com/box-project/box/releases/download/${BOX_VERSION}/box.phar" -O box.phar
 
       - name: Save Box PHAR cache
         if: inputs.use-cache && steps.cache-box.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: box.phar
           key: box-phar-${{ steps.box-version.outputs.version }}
